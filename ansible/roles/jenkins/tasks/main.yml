@@ -140,6 +140,26 @@
   tags:
     - jenkins
 
+- name: Read GitHub SSH private key
+  ansible.builtin.slurp:
+    src: "~/.ssh/github_ssh_without_phrase"
+  register: github_ssh
+  delegate_to: localhost
+  become: false
+  tags:
+    - jenkins
+    - new
+
+- name: Read known_hosts file
+  ansible.builtin.slurp:
+    src: "~/.ssh/known_hosts"
+  register: known_hosts
+  delegate_to: localhost
+  become: false
+  tags:
+    - jenkins
+    - new
+
 - name: Create directory for kubernetes manifests
   ansible.builtin.file:
     path: /home/ubuntu/kubernetes
@@ -151,6 +171,25 @@
   tags:
     - jenkins
 
+- name: Create Kubernetes secret file on remote
+  ansible.builtin.copy:
+    dest: "/home/ubuntu/kubernetes/jenkins-secret.yaml"
+    content: |
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: jenkins-ssh-key
+        namespace: jenkins
+      type: Opaque
+      data:
+        id_rsa: "{{ github_ssh.content }}"
+        known_hosts: "{{ known_hosts.content }}"
+    mode: "0600"
+  become: true
+  tags:
+    - jenkins
+    - new
+
 - name: Copy Jenkins kubernetes manifest
   ansible.builtin.template:
     src: jenkins.yaml.j2
@@ -161,6 +200,17 @@
   become: true
   tags:
     - jenkins
+    - new
+
+- name: Apply kubernetes secrets
+  kubernetes.core.k8s:
+    state: present
+    src: /home/ubuntu/kubernetes/jenkins-secret.yaml
+    apply: true
+  become: true
+  tags:
+    - jenkins
+    - new
 
 - name: Apply kubernetes manifests
   kubernetes.core.k8s:
@@ -170,3 +220,4 @@
   become: true
   tags:
     - jenkins
+    - new

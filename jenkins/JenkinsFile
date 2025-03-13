@@ -26,5 +26,10 @@ pipeline {
                 echo "Code deployed successfully"
             }
         }
+         stage("Post Deploy") {
+            steps {
+                echo "Code Post deployed"
+            }
+        }
     }
 }

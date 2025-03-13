@@ -54,10 +54,15 @@ spec:
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
+        - name: ssh-key-volume
+          mountPath: /var/jenkins_home/.ssh
       volumes:
       - name: jenkins-home
         persistentVolumeClaim:
           claimName: jenkins-pvc
+      - name: ssh-key-volume
+        secret:
+          secretName: jenkins-ssh-key
 ---
 apiVersion: v1
 kind: Service
