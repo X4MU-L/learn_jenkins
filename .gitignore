@@ -6,4 +6,4 @@
 *.tfstate.backup.*
 *.tfstate.backup
 myplan
- 
+*.pem
