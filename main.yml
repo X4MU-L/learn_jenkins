@@ -1,0 +1,295 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+      - docker.io
+    state: present
+    update_cache: true
+  become: true
+  tags:
+    - jenkins
+    - packages
+
+- name: Install Python kubernetes module
+  ansible.builtin.apt:
+    name:
+      - python3-kubernetes
+    state: present
+  become: true
+  tags:
+    - jenkins
+    - packages
+
+- name: Install kubectl using snap
+  community.general.snap:
+    name: kubectl
+    classic: true
+  become: true
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Add ubuntu user to docker group
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: yes
+  become: true
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Wait for group membership to apply
+  ansible.builtin.pause:
+    seconds: 5
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Download and install k3s
+  ansible.builtin.shell:
+    cmd: |
+      curl -sfL https://get.k3s.io | sh -
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Wait for k3s to be ready
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    state: present
+    delay: 5
+    timeout: 300
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create .kube directory for root
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: "0755"
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Copy k3s config for root
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /root/.kube/config
+    remote_src: yes
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create .kube directory for ubuntu user
+  ansible.builtin.file:
+    path: /home/ubuntu/.kube
+    state: directory
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Copy k3s config for ubuntu user
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: "0600"
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create directory for Jenkins data
+  ansible.builtin.file:
+    path: /data/jenkins
+    state: directory
+    mode: "0755"
+  become: true
+  tags:
+    - jenkins
+
+- name: Create directory for kubernetes manifests
+  ansible.builtin.file:
+    path: /home/ubuntu/kubernetes
+    state: directory
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+  become: true
+  tags:
+    - jenkins
+
+- name: Copy Jenkins kubernetes manifest
+  ansible.builtin.template:
+    src: jenkins.yaml.j2
+    dest: /home/ubuntu/kubernetes/jenkins.yaml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  become: true
+  tags:
+    - jenkins
+
+- name: Apply kubernetes manifests
+  kubernetes.core.k8s:
+    state: present
+    src: /home/ubuntu/kubernetes/jenkins.yaml
+    apply: yes
+  become: true
+  tags:
+    - jenkins
+
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+      - docker.io
+    state: present
+    update_cache: true
+  become: true
+  tags:
+    - jenkins
+    - packages
+
+- name: Install Python kubernetes module
+  ansible.builtin.apt:
+    name:
+      - python3-kubernetes
+    state: present
+  become: true
+  tags:
+    - jenkins
+    - packages
+
+- name: Install kubectl using snap
+  community.general.snap:
+    name: kubectl
+    classic: true
+  become: true
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Add ubuntu user to docker group
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: yes
+  become: true
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Wait for group membership to apply
+  ansible.builtin.pause:
+    seconds: 5
+  tags:
+    - jenkins
+    - packages
+    - kubernetes
+
+- name: Download and install k3s
+  ansible.builtin.shell:
+    cmd: |
+      curl -sfL https://get.k3s.io | sh -
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Wait for k3s to be ready
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    state: present
+    delay: 5
+    timeout: 300
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create .kube directory for root
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: "0755"
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Copy k3s config for root
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /root/.kube/config
+    remote_src: yes
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create .kube directory for ubuntu user
+  ansible.builtin.file:
+    path: /home/ubuntu/.kube
+    state: directory
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Copy k3s config for ubuntu user
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: "0600"
+  become: true
+  tags:
+    - jenkins
+    - kubernetes
+
+- name: Create directory for Jenkins data
+  ansible.builtin.file:
+    path: /data/jenkins
+    state: directory
+    mode: "0755"
+  become: true
+  tags:
+    - jenkins
+
+
+

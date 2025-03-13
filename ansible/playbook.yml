@@ -1,0 +1,19 @@
+---
+# Playbook to setup the application infrastructure
+# This playbook will setup the application infrastructure on AWS EC2 instances
+- name: Setup Application Infrastructure
+  hosts: jenkins
+  become: true
+  become_method: ansible.builtin.sudo
+  roles:
+    # Docker is required for both EC2 and EKS deployments
+    - role: docker
+      tags: [docker, setup]
+    # Jenkins CI/CD server
+    - role: jenkins
+      tags: [jenkins, cicd]
+    # Application roles
+    - role: webapp
+      tags: [webapp, application]
+    - role: nginx
+      tags: [nginx, webapp]
