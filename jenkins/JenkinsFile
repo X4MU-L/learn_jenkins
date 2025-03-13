@@ -31,5 +31,10 @@ pipeline {
                 echo "Code Post deployed"
             }
         }
+         stage("Git Hub Webhook") {
+            steps {
+                echo "Test gitHub Webhook"
+            }
+        }
     }
 }
